@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+
+# Compiled output
+bin/
+out/
+target/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+

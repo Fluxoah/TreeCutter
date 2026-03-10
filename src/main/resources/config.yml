@@ -1,0 +1,72 @@
+enabled: true
+
+disabled-players: []
+blacklist: []
+blacklist-message-disabled: []
+pending-unblacklist-notice: []
+prefix: "&8[&3T&bC&8]"
+
+behavior:
+  sneak-required: true
+  block-player-made-trees: true
+  require-axe: false
+  max-tree-size: 256
+  cooldown-seconds: 1.0
+  confirmation-required: true
+  confirmation-time-seconds: 10
+
+  tree-detection:
+    max-leaf-search-radius: 3
+    max-leaf-search-up: 5
+    min-leaf-count: 4
+    max-horizontal-spread: 6
+    require-upward-growth: true
+
+placed-log-tracking:
+  player-placed: true
+  command-placed: true
+  max-fill-volume: 50000
+
+notifications:
+  blacklist-actionbar-seconds: 10
+  unblacklist-actionbar-seconds: 10
+
+drops:
+  drop-items: true
+  preserve-tool-durability: false
+  allow-vanilla-drops: false
+
+hooks:
+  worldguard:
+    enabled: true
+    deny-partial-breaks: true
+  placeholderapi:
+    enabled: true
+
+logs:
+  - OAK_LOG
+  - SPRUCE_LOG
+  - BIRCH_LOG
+  - JUNGLE_LOG
+  - ACACIA_LOG
+  - DARK_OAK_LOG
+  - MANGROVE_LOG
+  - CHERRY_LOG
+  - PALE_OAK_LOG
+  - CRIMSON_STEM
+  - WARPED_STEM
+
+leaves:
+  - OAK_LEAVES
+  - SPRUCE_LEAVES
+  - BIRCH_LEAVES
+  - JUNGLE_LEAVES
+  - ACACIA_LEAVES
+  - DARK_OAK_LEAVES
+  - MANGROVE_LEAVES
+  - CHERRY_LEAVES
+  - PALE_OAK_LEAVES
+  - AZALEA_LEAVES
+  - FLOWERING_AZALEA_LEAVES
+  - NETHER_WART_BLOCK
+  - WARPED_WART_BLOCK

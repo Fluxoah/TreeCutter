@@ -1,0 +1,109 @@
+prefix: "&8[&3T&bC&8]"
+
+# ================================
+# Tree Cutter Messages
+# ================================
+# Use {prefix} for the plugin prefix
+# Use {player} for player name
+# Use {time} for cooldown time
+# Use {tool} for tool name
+# Use {max} for maximum tree size
+# Use {count} for number count
+# Use {type} for wood type
+# Color codes: §0-9, §a-f, §l (bold), §o (italic), §n (underline), §m (strikethrough), §r (reset)
+
+# ================================
+# GENERAL MESSAGES
+# ================================
+tree-cut-success: "{prefix} §7Tree cut successfully!"
+cooldown-active: "{prefix} §7Please wait §c{time}s §7before cutting another tree."
+tool-will-break: "§c§l⚠ WARNING §8§l» §7Your §c{tool} §7will break! §8(§c{remaining}§7/§a{needed} durability§8) §7Crouch + break again within §e{time}s §7to confirm"
+tool-broke: "{prefix} §cYour {tool} broke after cutting {count} logs."
+no-permission: "{prefix} §cYou don't have permission to use this."
+plugin-disabled: "{prefix} §7Tree Cutter is currently §cdisabled§7."
+player-disabled: "{prefix} §7You have tree cutter §cdisabled§7. Use §b/tc on §7to enable."
+blacklisted: "&c&lWARNING &8&l>> &cYou are blacklisted from Tree Cutter! &8| &7Type &e/tcmsg off &7to hide this message"
+unblacklisted-actionbar: "&a&lNOTICE &8&l>> &aYou are no longer blacklisted from Tree Cutter!"
+blacklist-message-disabled: "{prefix} &7Blacklist warnings &cdisabled&7."
+blacklist-message-already-disabled: "{prefix} §7Blacklist warnings are already §cdisabled§7."
+config-reloaded: "{prefix} §aConfiguration reloaded successfully!"
+tree-too-large: "{prefix} §7This tree is too large! Maximum size: §c{max} blocks"
+wood-type-disabled: "{prefix} §7This wood type is §cdisabled §7in the configuration."
+player-only: "{prefix} §cOnly players can use this command."
+need-axe: "{prefix} §7Hold an axe to use Tree Cutter."
+worldguard-blocked: "{prefix} §cYou cannot fell trees in this protected area."
+blacklist-message-not-blacklisted: "{prefix} §7You are not blacklisted."
+
+# ================================
+# COMMAND MESSAGES - /tc
+# ================================
+tc-enabled: "{prefix} §7Tree Cutter §aenabled§7!"
+tc-disabled: "{prefix} §7Tree Cutter §cdisabled§7!"
+tc-already-enabled: "{prefix} §7Tree Cutter is already §aenabled§7."
+tc-already-disabled: "{prefix} §7Tree Cutter is already §cdisabled§7."
+
+tc-help:
+  - "§8§m                §r {prefix} §8§m                "
+  - "§b/tc on §8- §7Enable tree cutter"
+  - "§b/tc off §8- §7Disable tree cutter"
+  - "§b/tc help §8- §7Show this help menu"
+  - "§8§m                                    "
+
+# ================================
+# COMMAND MESSAGES - /tcadmin
+# ================================
+plugin-turned-on: "{prefix} §7Plugin globally §aenabled§7!"
+plugin-turned-off: "{prefix} §7Plugin globally §cdisabled§7!"
+plugin-already-on: "{prefix} §7Plugin is already §aenabled§7."
+plugin-already-off: "{prefix} §7Plugin is already §cdisabled§7."
+
+player-not-found: "{prefix} §cPlayer not found or has never joined."
+player-blacklisted: "{prefix} §c{player} has been blacklisted."
+player-already-blacklisted: "{prefix} §c{player} is already blacklisted."
+player-unblacklisted: "{prefix} §a{player} has been unblacklisted."
+player-not-blacklisted: "{prefix} §7{player} is not blacklisted."
+
+blacklist-empty: "{prefix} §7No players are currently blacklisted."
+blacklist-header: "§8§m        §r {prefix} §cBlacklisted Players §8§m        "
+blacklist-entry: "§7- §c{player}"
+blacklist-footer: "§8§m                                                "
+
+tcadmin-help:
+  - "§8§m            §r {prefix} §bAdmin Commands §8§m            "
+  - "§b/tcadmin on §8- §7Enable plugin globally"
+  - "§b/tcadmin off §8- §7Disable plugin globally"
+  - "§b/tcadmin reload §8- §7Reload configuration"
+  - "§b/tcadmin check <player> §8- §7View player stats"
+  - "§b/tcadmin blacklist add <player> §8- §7Blacklist player"
+  - "§b/tcadmin blacklist remove <player> §8- §7Unblacklist player"
+  - "§b/tcadmin blacklist list §8- §7List blacklisted players"
+  - "§b/tcadmin help §8- §7Show this help menu"
+  - "§8§m                                                            "
+
+# ================================
+# USAGE MESSAGES
+# ================================
+usage-tc: "{prefix} §cUsage: §7/tc [on|off|help]"
+usage-tcadmin: "{prefix} §cUsage: §7/tcadmin [reload|help|on|off|check|blacklist]"
+usage-tcadmin-blacklist: "{prefix} §cUsage: §7/tcadmin blacklist [add|remove|list] [player]"
+usage-tcadmin-check: "{prefix} §cUsage: §7/tcadmin check <player>"
+usage-tcmsg: "{prefix} &cUsage: &7/tcmsg"
+
+# ================================
+# STATS MESSAGES
+# ================================
+stats-no-data: "{prefix} §7{player} has not cut any trees yet."
+stats-header: "§8§m        §r {prefix} §6{player}'s Statistics §8§m        "
+stats-total: "§7Total Trees Cut: §b§l{count}"
+stats-favorite: "§7Favorite Wood Type: §e{type}"
+stats-first-cut: "§8First Cut: §7{date}"
+stats-last-cut: "§8Last Active: §7{date}"
+stats-separator: "§8§m                                                "
+stats-wood-line: "§7{type}: §b{count} §8(§e{percent}%§8)"
+stats-footer: "§8§m                                                "
+
+# ================================
+# PLACEHOLDER MESSAGES
+# ================================
+placeholder-enabled: "§aEnabled"
+placeholder-disabled: "§cDisabled"

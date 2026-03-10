@@ -1,0 +1,66 @@
+name: Tree_Cutter
+version: '${version}'
+main: org.Fluxoah.treeCutter.TreeCutter
+api-version: '1.21'
+author: Fluxoah
+description: Fast tree felling with optional WorldGuard protection checks and PlaceholderAPI support.
+softdepend: [LuckPerms, WorldGuard, PlaceholderAPI]
+
+commands:
+  tc:
+    description: Toggle tree cutter on or off.
+    usage: /<command> [on|off|help]
+    aliases: [treecutter, tree]
+  tcadmin:
+    description: Admin commands for Tree Cutter.
+    usage: /<command> [on|off|reload|blacklist|check|help]
+  tcmsg:
+    description: Manage Tree Cutter warning messages.
+    usage: /<command>
+
+permissions:
+  treecutter.use:
+    description: Allows tree felling itself.
+    default: false
+  treecutter.command.tc:
+    description: Allows use of /tc.
+    default: false
+  treecutter.command.tcmsg:
+    description: Allows use of /tcmsg.
+    default: false
+  treecutter.command.tc.on:
+    description: Allows /tc on.
+    default: false
+  treecutter.command.tc.off:
+    description: Allows /tc off.
+    default: false
+  treecutter.command.tc.status:
+    description: Allows /tc status.
+    default: false
+  treecutter.command.tc.help:
+    description: Allows /tc help.
+    default: false
+  treecutter.command.tcadmin:
+    description: Allows use of /tcadmin.
+    default: false
+  treecutter.command.tcadmin.on:
+    description: Allows /tcadmin on.
+    default: false
+  treecutter.command.tcadmin.off:
+    description: Allows /tcadmin off.
+    default: false
+  treecutter.command.tcadmin.reload:
+    description: Allows /tcadmin reload.
+    default: false
+  treecutter.command.tcadmin.blacklist:
+    description: Allows /tcadmin blacklist.
+    default: false
+  treecutter.command.tcadmin.check:
+    description: Allows /tcadmin check.
+    default: false
+  treecutter.command.tcadmin.help:
+    description: Allows /tcadmin help.
+    default: false
+  treecutter.bypass.worldguard:
+    description: Bypass WorldGuard protection checks for tree felling.
+    default: false

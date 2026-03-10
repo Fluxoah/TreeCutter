@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'xyz.jpenilla.run-paper' version '2.3.1'
+}
+
+group = 'org.Fluxoah'
+version = '2.1.0'
+description = 'Tree Cutter - clean timber plugin with optional LuckPerms, WorldGuard, and PlaceholderAPI support'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = 'enginehub'
+        url = 'https://maven.enginehub.org/repo/'
+    }
+    maven {
+        name = 'placeholderapi'
+        url = 'https://repo.helpch.at/releases/'
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.14'
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks {
+    assemble {
+        dependsOn(shadowJar)
+    }
+
+    shadowJar {
+        archiveClassifier.set('')
+        archiveFileName.set("TreeCutter-${version}.jar")
+    }
+
+    runServer {
+        minecraftVersion('1.21.1')
+    }
+
+    processResources {
+        filteringCharset = 'UTF-8'
+        filesMatching('plugin.yml') {
+            expand(version: project.version)
+        }
+    }
+
+    compileJava {
+        options.encoding = 'UTF-8'
+        options.release.set(21)
+    }
+}
