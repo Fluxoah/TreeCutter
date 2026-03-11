@@ -1,6 +1,7 @@
 package org.Fluxoah.treeCutter.listeners;
 
 import org.Fluxoah.treeCutter.TreeCutter;
+import org.Fluxoah.treeCutter.hooks.WorldGuardHook;
 import org.Fluxoah.treeCutter.managers.ConfigManager;
 import org.Fluxoah.treeCutter.managers.MessageManager;
 import org.Fluxoah.treeCutter.managers.NoticeManager;
@@ -97,8 +98,9 @@ public class TreeListener implements Listener {
             return;
         }
 
-        if (plugin.getWorldGuardHook().isEnabled()
-                && !plugin.getWorldGuardHook().canBreakAll(player, List.of(block))) {
+        WorldGuardHook worldGuardHook = plugin.getWorldGuardHook();
+        if (worldGuardHook != null && worldGuardHook.isEnabled()
+                && !worldGuardHook.canBreakAll(player, List.of(block))) {
             return;
         }
 
@@ -117,12 +119,12 @@ public class TreeListener implements Listener {
             return;
         }
 
-        if (plugin.getWorldGuardHook().isEnabled() && !plugin.getWorldGuardHook().canBreakAll(player, treeBlocks)) {
+        if (worldGuardHook != null && worldGuardHook.isEnabled() && !worldGuardHook.canBreakAll(player, treeBlocks)) {
             if (config.isDenyPartialBreaks()) {
                 return;
             }
             treeBlocks = treeBlocks.stream()
-                    .filter(treeBlock -> plugin.getWorldGuardHook().canBreakAll(player, List.of(treeBlock)))
+                    .filter(treeBlock -> worldGuardHook.canBreakAll(player, List.of(treeBlock)))
                     .toList();
             if (treeBlocks.isEmpty()) {
                 return;

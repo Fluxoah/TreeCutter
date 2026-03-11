@@ -34,7 +34,12 @@ public final class TreeCutter extends JavaPlugin {
     @Override
     public void onLoad() {
         if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            WorldGuardHook.registerFlag(this);
+            try {
+                WorldGuardHook.registerFlag(this);
+            } catch (Throwable throwable) {
+                getLogger().warning("WorldGuard flag registration skipped: " + throwable.getClass().getSimpleName()
+                        + ": " + throwable.getMessage());
+            }
         }
     }
 
@@ -52,7 +57,7 @@ public final class TreeCutter extends JavaPlugin {
         this.statsManager = new StatsManager(this);
         this.noticeManager = new NoticeManager(this);
         this.placedLogManager = new PlacedLogManager(configManager);
-        this.worldGuardHook = new WorldGuardHook(this);
+        this.worldGuardHook = createWorldGuardHook();
 
         configManager.loadConfig();
         messageManager.loadMessages();
@@ -150,6 +155,20 @@ public final class TreeCutter extends JavaPlugin {
 
     public WorldGuardHook getWorldGuardHook() {
         return worldGuardHook;
+    }
+
+    private WorldGuardHook createWorldGuardHook() {
+        if (getServer().getPluginManager().getPlugin("WorldGuard") == null) {
+            return null;
+        }
+
+        try {
+            return new WorldGuardHook(this);
+        } catch (Throwable throwable) {
+            getLogger().warning("WorldGuard integration disabled: " + throwable.getClass().getSimpleName()
+                    + ": " + throwable.getMessage());
+            return null;
+        }
     }
 
     private boolean isFoliaServer() {

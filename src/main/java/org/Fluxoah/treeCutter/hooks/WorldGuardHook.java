@@ -7,7 +7,6 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
@@ -79,20 +78,13 @@ public class WorldGuardHook {
             StateFlag flag = new StateFlag(TREECUTTER_FLAG_NAME, true);
             registry.register(flag);
             treeCutterFlag = flag;
-        } catch (FlagConflictException exception) {
+        } catch (RuntimeException exception) {
             Flag<?> existing = registry.get(TREECUTTER_FLAG_NAME);
             if (existing instanceof StateFlag stateFlag) {
                 treeCutterFlag = stateFlag;
-            } else {
-                plugin.getLogger().warning("WorldGuard flag '" + TREECUTTER_FLAG_NAME + "' exists but is not a StateFlag.");
+                return;
             }
-        } catch (IllegalStateException exception) {
-            Flag<?> existing = registry.get(TREECUTTER_FLAG_NAME);
-            if (existing instanceof StateFlag stateFlag) {
-                treeCutterFlag = stateFlag;
-            } else {
-                plugin.getLogger().warning("WorldGuard flag '" + TREECUTTER_FLAG_NAME + "' could not be registered.");
-            }
+            plugin.getLogger().warning("WorldGuard flag '" + TREECUTTER_FLAG_NAME + "' could not be registered.");
         }
     }
 
