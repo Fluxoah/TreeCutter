@@ -43,7 +43,7 @@ tasks {
 
     shadowJar {
         archiveClassifier.set('')
-        archiveFileName.set("TreeCutter-${version}.jar")
+        archiveFileName.set("TreeCutter-${version}-Folia.jar")
     }
 
     runServer {
