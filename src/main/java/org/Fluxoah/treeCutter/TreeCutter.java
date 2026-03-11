@@ -18,6 +18,9 @@ import org.Fluxoah.treeCutter.placeholders.TimberPlaceholderExpansion;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
 public final class TreeCutter extends JavaPlugin {
 
     private ConfigManager configManager;
@@ -37,6 +40,12 @@ public final class TreeCutter extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if (!isFoliaServer()) {
+            getLogger().severe("This TreeCutter branch is Folia-only. Disable it on non-Folia servers.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         this.configManager = new ConfigManager(this);
         this.messageManager = new MessageManager(this);
         this.permissionManager = new PermissionManager(this);
@@ -60,6 +69,8 @@ public final class TreeCutter extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getServer().getAsyncScheduler().cancelTasks(this);
+        getServer().getGlobalRegionScheduler().cancelTasks(this);
         if (noticeManager != null) {
             noticeManager.shutdown();
         }
@@ -104,14 +115,13 @@ public final class TreeCutter extends JavaPlugin {
     }
 
     private void startAutoSaveTask() {
-        long intervalTicks = 20L * 60L * 5L;
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+        getServer().getAsyncScheduler().runAtFixedRate(this, task -> {
             try {
                 statsManager.saveStats();
             } catch (Exception exception) {
                 getLogger().warning("Failed to auto-save stats: " + exception.getMessage());
             }
-        }, intervalTicks, intervalTicks);
+        }, 5L, 5L, TimeUnit.MINUTES);
     }
 
     public ConfigManager getConfigManager() {
@@ -140,5 +150,11 @@ public final class TreeCutter extends JavaPlugin {
 
     public WorldGuardHook getWorldGuardHook() {
         return worldGuardHook;
+    }
+
+    private boolean isFoliaServer() {
+        String serverName = getServer().getName().toLowerCase(Locale.ROOT);
+        String serverVersion = getServer().getVersion().toLowerCase(Locale.ROOT);
+        return serverName.contains("folia") || serverVersion.contains("folia");
     }
 }

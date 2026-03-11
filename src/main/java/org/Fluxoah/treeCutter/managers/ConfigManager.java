@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigManager {
 
@@ -43,16 +44,16 @@ public class ConfigManager {
     private int confirmationTimeSeconds;
     private Set<Material> logTypes = new HashSet<>();
     private Set<Material> leafTypes = new HashSet<>();
-    private final Set<UUID> blacklist = new HashSet<>();
-    private final Set<UUID> disabledPlayers = new HashSet<>();
-    private final Set<UUID> blacklistMessageDisabled = new HashSet<>();
-    private final Set<UUID> pendingUnblacklistNotice = new HashSet<>();
+    private final Set<UUID> blacklist = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> disabledPlayers = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> blacklistMessageDisabled = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> pendingUnblacklistNotice = ConcurrentHashMap.newKeySet();
 
     public ConfigManager(TreeCutter plugin) {
         this.plugin = plugin;
     }
 
-    public void loadConfig() {
+    public synchronized void loadConfig() {
         plugin.saveDefaultConfig();
         plugin.reloadConfig();
         this.config = plugin.getConfig();
@@ -163,7 +164,7 @@ public class ConfigManager {
         }
     }
 
-    private void saveState() {
+    private synchronized void saveState() {
         config.set("enabled", serverEnabled);
         config.set("blacklist", blacklist.stream().map(UUID::toString).toList());
         config.set("disabled-players", disabledPlayers.stream().map(UUID::toString).toList());
@@ -172,28 +173,28 @@ public class ConfigManager {
         plugin.saveConfig();
     }
 
-    public void setServerEnabled(boolean enabled) {
+    public synchronized void setServerEnabled(boolean enabled) {
         this.serverEnabled = enabled;
         saveState();
     }
 
-    public void addToBlacklist(UUID uuid) {
+    public synchronized void addToBlacklist(UUID uuid) {
         blacklist.add(uuid);
         pendingUnblacklistNotice.remove(uuid);
         saveState();
     }
 
-    public void removeFromBlacklist(UUID uuid) {
+    public synchronized void removeFromBlacklist(UUID uuid) {
         blacklist.remove(uuid);
         saveState();
     }
 
-    public void addDisabledPlayer(UUID uuid) {
+    public synchronized void addDisabledPlayer(UUID uuid) {
         disabledPlayers.add(uuid);
         saveState();
     }
 
-    public void removeDisabledPlayer(UUID uuid) {
+    public synchronized void removeDisabledPlayer(UUID uuid) {
         disabledPlayers.remove(uuid);
         saveState();
     }
@@ -270,22 +271,22 @@ public class ConfigManager {
         return blacklistMessageDisabled.contains(uuid);
     }
 
-    public void disableBlacklistMessage(UUID uuid) {
+    public synchronized void disableBlacklistMessage(UUID uuid) {
         blacklistMessageDisabled.add(uuid);
         saveState();
     }
 
-    public void enableBlacklistMessage(UUID uuid) {
+    public synchronized void enableBlacklistMessage(UUID uuid) {
         blacklistMessageDisabled.remove(uuid);
         saveState();
     }
 
-    public void queueUnblacklistNotice(UUID uuid) {
+    public synchronized void queueUnblacklistNotice(UUID uuid) {
         pendingUnblacklistNotice.add(uuid);
         saveState();
     }
 
-    public boolean consumePendingUnblacklistNotice(UUID uuid) {
+    public synchronized boolean consumePendingUnblacklistNotice(UUID uuid) {
         boolean removed = pendingUnblacklistNotice.remove(uuid);
         if (removed) {
             saveState();

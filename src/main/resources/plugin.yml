@@ -2,6 +2,7 @@ name: Tree_Cutter
 version: '${version}'
 main: org.Fluxoah.treeCutter.TreeCutter
 api-version: '1.21'
+folia-supported: true
 author: Fluxoah
 description: Fast tree felling with optional WorldGuard protection checks and PlaceholderAPI support.
 softdepend: [LuckPerms, WorldGuard, PlaceholderAPI]

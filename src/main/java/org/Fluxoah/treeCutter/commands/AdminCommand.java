@@ -116,7 +116,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 if (target.isOnline()) {
                     Player online = target.getPlayer();
                     if (online != null) {
-                        online.updateCommands();
+                        perm.refreshPlayerState(online);
                     }
                 }
                 sender.sendMessage(msg.format("player-blacklisted", "player", readableName(target, args[2])));
@@ -137,7 +137,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 if (target.isOnline()) {
                     Player online = target.getPlayer();
                     if (online != null) {
-                        online.updateCommands();
+                        perm.refreshPlayerState(online);
                     }
                 }
                 sender.sendMessage(msg.format("player-unblacklisted", "player", readableName(target, args[2])));

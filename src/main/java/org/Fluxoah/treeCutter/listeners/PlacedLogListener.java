@@ -117,7 +117,8 @@ public class PlacedLogListener implements Listener {
             return;
         }
 
-        plugin.getServer().getScheduler().runTask(plugin, () -> placedLogs.trackPlacedLog(context.world(), x, y, z));
+        plugin.getServer().getRegionScheduler().runDelayed(plugin, context.world(), x >> 4, z >> 4,
+                task -> placedLogs.trackPlacedLog(context.world(), x, y, z), 1L);
     }
 
     private void trackFromFill(String[] args, CommandContext context) {
@@ -152,15 +153,17 @@ public class PlacedLogListener implements Listener {
             return;
         }
 
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            for (int x = minX; x <= maxX; x++) {
-                for (int y = minY; y <= maxY; y++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        placedLogs.trackPlacedLog(context.world(), x, y, z);
-                    }
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    final int fx = x;
+                    final int fy = y;
+                    final int fz = z;
+                    plugin.getServer().getRegionScheduler().runDelayed(plugin, context.world(), fx >> 4, fz >> 4,
+                            task -> placedLogs.trackPlacedLog(context.world(), fx, fy, fz), 1L);
                 }
             }
-        });
+        }
     }
 
     private CommandContext resolveContext(CommandSender sender) {

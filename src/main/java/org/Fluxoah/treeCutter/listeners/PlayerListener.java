@@ -17,8 +17,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         plugin.getNoticeManager().deliverPendingNotice(event.getPlayer());
-        event.getPlayer().updateCommands();
-        plugin.getPermissionManager().applyCommandPermissions();
+        plugin.getPermissionManager().refreshPlayerState(event.getPlayer());
     }
 
     @EventHandler

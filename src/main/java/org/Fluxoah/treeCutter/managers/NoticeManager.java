@@ -2,12 +2,12 @@ package org.Fluxoah.treeCutter.managers;
 
 import org.Fluxoah.treeCutter.TreeCutter;
 import org.Fluxoah.treeCutter.utils.ActionBarUtil;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class NoticeManager {
@@ -15,7 +15,7 @@ public class NoticeManager {
     private final TreeCutter plugin;
     private final ConfigManager config;
     private final MessageManager msg;
-    private final Map<UUID, BukkitTask> activeNotices = new HashMap<>();
+    private final Map<UUID, ScheduledTask> activeNotices = new ConcurrentHashMap<>();
 
     public NoticeManager(TreeCutter plugin) {
         this.plugin = plugin;
@@ -47,14 +47,14 @@ public class NoticeManager {
             return;
         }
         if (config.consumePendingUnblacklistNotice(player.getUniqueId())) {
-            plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+            player.getScheduler().runDelayed(plugin, task ->
                     showTimedActionBar(player, msg.getMessage("unblacklisted-actionbar"),
-                            config.getUnblacklistNoticeSeconds()), 20L);
+                            config.getUnblacklistNoticeSeconds()), null, 20L);
         }
     }
 
     public void cancel(UUID playerId) {
-        BukkitTask task = activeNotices.remove(playerId);
+        ScheduledTask task = activeNotices.remove(playerId);
         if (task != null) {
             task.cancel();
         }
@@ -71,19 +71,20 @@ public class NoticeManager {
         cancel(playerId);
 
         AtomicInteger remainingSends = new AtomicInteger(Math.max(1, seconds));
-        BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-            Player online = plugin.getServer().getPlayer(playerId);
-            if (online == null || !online.isOnline()) {
+        ScheduledTask task = player.getScheduler().runAtFixedRate(plugin, scheduledTask -> {
+            if (!player.isOnline()) {
                 cancel(playerId);
                 return;
             }
 
-            ActionBarUtil.send(online, message);
+            ActionBarUtil.send(player, message);
             if (remainingSends.decrementAndGet() <= 0) {
                 cancel(playerId);
             }
-        }, 0L, 20L);
+        }, null, 1L, 20L);
 
-        activeNotices.put(playerId, task);
+        if (task != null) {
+            activeNotices.put(playerId, task);
+        }
     }
 }

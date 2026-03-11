@@ -1,7 +1,6 @@
 package org.Fluxoah.treeCutter.managers;
 
 import org.Fluxoah.treeCutter.TreeCutter;
-import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
@@ -128,8 +127,19 @@ public class PermissionManager {
         if (tcmsg != null) {
             tcmsg.setPermission(PLAYER_MESSAGE_COMMAND_PERMISSION);
         }
-        Bukkit.getOnlinePlayers().forEach(Player::recalculatePermissions);
-        Bukkit.getOnlinePlayers().forEach(Player::updateCommands);
+        plugin.getServer().getGlobalRegionScheduler().execute(plugin,
+                () -> plugin.getServer().getOnlinePlayers().forEach(this::refreshPlayerState));
+    }
+
+    public void refreshPlayerState(Player player) {
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        player.getScheduler().run(plugin, task -> {
+            player.recalculatePermissions();
+            player.updateCommands();
+        }, null);
     }
 
     private void applyPermissionDefault(String node, PermissionDefault permissionDefault) {

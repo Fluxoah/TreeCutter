@@ -3,14 +3,14 @@ package org.Fluxoah.treeCutter.managers;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlacedLogManager {
 
     private final ConfigManager config;
-    private final Set<String> trackedPlacedLogs = new HashSet<>();
+    private final Set<String> trackedPlacedLogs = ConcurrentHashMap.newKeySet();
 
     public PlacedLogManager(ConfigManager config) {
         this.config = config;

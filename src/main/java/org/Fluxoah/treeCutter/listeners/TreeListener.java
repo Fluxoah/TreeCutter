@@ -23,13 +23,13 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TreeListener implements Listener {
@@ -41,8 +41,8 @@ public class TreeListener implements Listener {
     private final StatsManager stats;
     private final NoticeManager notices;
     private final PlacedLogManager placedLogs;
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private final Map<UUID, PendingConfirmation> confirmations = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, PendingConfirmation> confirmations = new ConcurrentHashMap<>();
 
     public TreeListener(TreeCutter plugin) {
         this.plugin = plugin;
@@ -167,7 +167,7 @@ public class TreeListener implements Listener {
             return 0;
         }
 
-        Map<String, Integer> logsCounted = new HashMap<>();
+        Map<String, Integer> logsCounted = new java.util.HashMap<>();
         for (Block block : treeBlocks) {
             Material type = block.getType();
             logsCounted.merge(type.name(), 1, Integer::sum);
