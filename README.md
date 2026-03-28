@@ -22,7 +22,7 @@ TreeCutter is a lightweight and configurable Minecraft plugin that allows player
 - Blacklist system with action-bar warnings and `/tcmsg off` to hide blacklist warnings.
 - Unblacklist action-bar notice, including delivery when the player joins later.
 - Prefix and messages fully configurable through `config.yml` and `messages.yml`.
-- Compatible with Paper, Purpur, and Spigot 1.21+.
+- Compatible with Bukkit-derived servers including Spigot, Paper, and Purpur on the 26.1 update line.
 
 ---
 
@@ -35,6 +35,9 @@ TreeCutter is a lightweight and configurable Minecraft plugin that allows player
 `messages.yml`
 4. Configure options as needed.
 5. Restart the server (or run `/tcadmin reload`) to apply changes.
+
+For Minecraft 26.1 servers, run the server on Java 25.
+Building the plugin itself only requires Java 21+ on this branch.
 
 ---
 

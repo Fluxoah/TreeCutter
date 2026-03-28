@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'xyz.jpenilla.run-paper' version '2.3.1'
 }
 
@@ -8,11 +7,23 @@ group = 'org.Fluxoah'
 version = '2.1.0'
 description = 'Tree Cutter - clean timber plugin with optional LuckPerms, WorldGuard, and PlaceholderAPI support'
 
+def targetSpigotApi = '26.1-R0.1-SNAPSHOT'
+def paperDevRuntimeVersion = '1.21.11'
+def buildJavaVersion = 21
+def serverRuntimeJavaVersion = 25
+def targetBytecodeVersion = 21
+def worldGuardVersion = '7.0.16'
+def placeholderApiVersion = '2.12.2'
+
 repositories {
     mavenCentral()
     maven {
         name = 'papermc'
         url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = 'spigotmc-snapshots'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
     maven {
         name = 'enginehub'
@@ -25,29 +36,31 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
-    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.14'
-    compileOnly 'me.clip:placeholderapi:2.11.6'
+    compileOnly "org.spigotmc:spigot-api:${targetSpigotApi}"
+    compileOnly "com.sk89q.worldguard:worldguard-bukkit:${worldGuardVersion}"
+    compileOnly "me.clip:placeholderapi:${placeholderApiVersion}"
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(buildJavaVersion)
     }
 }
 
 tasks {
-    assemble {
-        dependsOn(shadowJar)
-    }
-
-    shadowJar {
-        archiveClassifier.set('')
+    jar {
         archiveFileName.set("TreeCutter-${version}.jar")
     }
 
     runServer {
-        minecraftVersion('1.21.1')
+        // Paper's public downloads are still labeled 1.21.11 while Spigot has
+        // already published the corresponding 26.1 API naming.
+        minecraftVersion(paperDevRuntimeVersion)
+        // Minecraft 26.1 servers require Java 25 at runtime even though the
+        // public API artifact can still be compiled against from Java 21.
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(serverRuntimeJavaVersion)
+        }
     }
 
     processResources {
@@ -59,6 +72,6 @@ tasks {
 
     compileJava {
         options.encoding = 'UTF-8'
-        options.release.set(21)
+        options.release.set(targetBytecodeVersion)
     }
 }
