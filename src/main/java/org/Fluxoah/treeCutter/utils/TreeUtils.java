@@ -1,6 +1,7 @@
 package org.Fluxoah.treeCutter.utils;
 
 import org.Fluxoah.treeCutter.managers.ConfigManager;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -35,7 +36,7 @@ public final class TreeUtils {
       }
 
       Queue<Block> queue = new ArrayDeque<>();
-      Set<String> visited = new HashSet<>();
+      Set<Location> visited = new HashSet<>();
       Set<Block> result = new TreeSet<>(COMPARATOR_BLOCK);
       int baseX = start.getX();
       int baseZ = start.getZ();
@@ -46,7 +47,7 @@ public final class TreeUtils {
       boolean foundUpwardGrowth = false;
 
       queue.add(start);
-      visited.add(key(start));
+      visited.add(start.getLocation());
 
       while (!queue.isEmpty()) {
          Block current = queue.poll();
@@ -76,8 +77,7 @@ public final class TreeUtils {
                continue;
             }
 
-            String key = key(relative);
-            if (visited.add(key)) {
+            if (visited.add(relative.getLocation())) {
                queue.add(relative);
             }
          }
@@ -106,17 +106,6 @@ public final class TreeUtils {
       return count;
    }
 
-   public static List<Block> sortBottomToTop(List<Block> blocks) {
-      blocks.sort(Comparator
-                        .comparingInt(Block::getY)
-                        .thenComparingInt(Block::getX)
-                        .thenComparingInt(Block::getZ));
-      return blocks;
-   }
-
-   private static String key(Block block) {
-      return block.getWorld().getUID() + ":" + block.getX() + ':' + block.getY() + ':' + block.getZ();
-   }
 
    public record TreeScanResult(Set<Block> blocks, boolean validTree, boolean tooLarge, boolean naturalMismatch) {
       public static TreeScanResult invalid() {

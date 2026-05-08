@@ -307,15 +307,12 @@ public class TreeListener implements Listener {
       return keys;
    }
 
-   private String blockKey(Block block) {
-      return block.getWorld().getUID() + ":" + block.getX() + ":" + block.getY() + ":" + block.getZ();
-   }
+
 
    private int applyUnbreaking(int baseLoss, int unbreakingLevel) {
       if (unbreakingLevel <= 0) {
          return baseLoss;
       }
-
 
       /*
             If UNBREAKING is set, then chance (according to wiki) of losing durability for tool is 100%/(level+1)
