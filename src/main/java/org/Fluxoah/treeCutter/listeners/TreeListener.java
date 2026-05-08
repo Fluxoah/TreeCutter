@@ -161,11 +161,8 @@ public class TreeListener implements Listener {
          logsCounted.merge(type.name(), 1, Integer::sum);
 
          if (config.allowVanillaDrops()) {
-            Collection<ItemStack> drops = block.getDrops(tool);
-            for (ItemStack drop : drops) {
-               block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.35, 0.5), drop);
-            }
-         } else if (config.shouldDropItems()) {
+            block.breakNaturally(tool);
+         } else if (!config.shouldDropItems()) {
             block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.35, 0.5), new ItemStack(type));
          }
 
@@ -306,7 +303,6 @@ public class TreeListener implements Listener {
       }
       return keys;
    }
-
 
 
    private int applyUnbreaking(int baseLoss, int unbreakingLevel) {

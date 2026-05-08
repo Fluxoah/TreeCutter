@@ -107,7 +107,7 @@ public final class TreeUtils {
    }
 
 
-   public record TreeScanResult(Set<Block> blocks, boolean validTree, boolean tooLarge, boolean naturalMismatch) {
+   public record TreeScanResult(Set<Block> blocks,  boolean validTree, boolean tooLarge, boolean naturalMismatch) {
       public static TreeScanResult invalid() {
          return new TreeScanResult(Set.of(), false, false, false);
       }
