@@ -1,14 +1,10 @@
 package org.Fluxoah.treeCutter.listeners;
 
 import org.Fluxoah.treeCutter.TreeCutter;
-import org.Fluxoah.treeCutter.managers.ConfigManager;
-import org.Fluxoah.treeCutter.managers.MessageManager;
-import org.Fluxoah.treeCutter.managers.NoticeManager;
-import org.Fluxoah.treeCutter.managers.PermissionManager;
-import org.Fluxoah.treeCutter.managers.PlacedLogManager;
-import org.Fluxoah.treeCutter.managers.StatsManager;
+import org.Fluxoah.treeCutter.managers.*;
 import org.Fluxoah.treeCutter.utils.ActionBarUtil;
 import org.Fluxoah.treeCutter.utils.TreeUtils;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -22,340 +18,332 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TreeListener implements Listener {
 
-    private final TreeCutter plugin;
-    private final ConfigManager config;
-    private final MessageManager msg;
-    private final PermissionManager perm;
-    private final StatsManager stats;
-    private final NoticeManager notices;
-    private final PlacedLogManager placedLogs;
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private final Map<UUID, PendingConfirmation> confirmations = new HashMap<>();
+   private final TreeCutter plugin;
+   private final ConfigManager config;
+   private final MessageManager msg;
+   private final PermissionManager perm;
+   private final StatsManager stats;
+   private final NoticeManager notices;
+   private final PlacedLogManager placedLogs;
+   private final Map<UUID, Long> cooldowns = new HashMap<>();
+   private final Map<UUID, PendingConfirmation> confirmations = new HashMap<>();
 
-    public TreeListener(TreeCutter plugin) {
-        this.plugin = plugin;
-        this.config = plugin.getConfigManager();
-        this.msg = plugin.getMessageManager();
-        this.perm = plugin.getPermissionManager();
-        this.stats = plugin.getStatsManager();
-        this.notices = plugin.getNoticeManager();
-        this.placedLogs = plugin.getPlacedLogManager();
-    }
+   public TreeListener(TreeCutter plugin) {
+      this.plugin = plugin;
+      this.config = plugin.getConfigManager();
+      this.msg = plugin.getMessageManager();
+      this.perm = plugin.getPermissionManager();
+      this.stats = plugin.getStatsManager();
+      this.notices = plugin.getNoticeManager();
+      this.placedLogs = plugin.getPlacedLogManager();
+   }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
+   @EventHandler(ignoreCancelled = true)
+   public void onBlockBreak(BlockBreakEvent event) {
+      Player player = event.getPlayer();
+      Block block = event.getBlock();
 
-        clearExpiredConfirmation(player);
+      clearExpiredConfirmation(player);
 
-        if (!config.getLogTypes().contains(block.getType())) {
-            return;
-        }
+      if (!config.getLogTypes().contains(block.getType())) {
+         return;
+      }
 
-        if (!config.isServerEnabled()) {
-            return;
-        }
+      if (!config.isServerEnabled()) {
+         return;
+      }
 
-        if (!perm.canUseTreeFeller(player)) {
-            return;
-        }
+      if (!perm.canUseTreeFeller(player)) {
+         return;
+      }
 
-        if (config.isPlayerDisabled(player.getUniqueId())) {
-            return;
-        }
+      if (config.isPlayerDisabled(player.getUniqueId())) {
+         return;
+      }
 
-        if (config.isSneakRequired() && !player.isSneaking()) {
-            return;
-        }
+      if (config.isSneakRequired() && !player.isSneaking()) {
+         return;
+      }
 
-        if (config.isBlacklisted(player.getUniqueId())) {
-            notices.showBlacklistWarning(player);
-            return;
-        }
+      if (config.isBlacklisted(player.getUniqueId())) {
+         notices.showBlacklistWarning(player);
+         return;
+      }
 
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        if (config.isRequireAxe() && !isAxe(tool)) {
-            return;
-        }
+      ItemStack tool = player.getInventory().getItemInMainHand();
+      if (config.isRequireAxe() && !isAxe(tool)) {
+         return;
+      }
 
-        double remainingCooldown = getCooldownRemaining(player);
-        if (remainingCooldown > 0D) {
-            player.sendMessage(msg.format("cooldown-active", "time", formatSeconds(remainingCooldown)));
-            return;
-        }
+      double remainingCooldown = getCooldownRemaining(player);
+      if (remainingCooldown > 0D) {
+         player.sendMessage(msg.format("cooldown-active", "time", formatSeconds(remainingCooldown)));
+         return;
+      }
 
-        if (plugin.getWorldGuardHook().isEnabled()
-                && !plugin.getWorldGuardHook().canBreakAll(player, List.of(block))) {
-            return;
-        }
+      if (plugin.getWorldGuardHook().isEnabled()
+          && !plugin.getWorldGuardHook().canBreakAll(player, List.of(block))) {
+         return;
+      }
 
-        TreeUtils.TreeScanResult scanResult = TreeUtils.scanTree(block, config);
-        if (config.shouldBlockPlayerMadeTrees() && scanResult.naturalMismatch()) {
-            return;
-        }
-        if (!scanResult.validTree() || scanResult.blocks().isEmpty()) {
-            return;
-        }
+      TreeUtils.TreeScanResult scanResult = TreeUtils.scanTree(block, config);
+      if (config.shouldBlockPlayerMadeTrees() && scanResult.naturalMismatch()) {
+         return;
+      }
+      if (!scanResult.validTree() || scanResult.blocks().isEmpty()) {
+         return;
+      }
 
-        List<Block> treeBlocks = TreeUtils.sortBottomToTop(scanResult.blocks());
-        if (config.shouldBlockPlayerMadeTrees()
-                && (config.isTrackPlayerPlacedLogs() || config.isTrackCommandPlacedLogs())
-                && placedLogs.containsPlacedLog(treeBlocks)) {
-            return;
-        }
+      Set<Block> treeBlocks = scanResult.blocks();
+      if (config.shouldBlockPlayerMadeTrees()
+          && (config.isTrackPlayerPlacedLogs() || config.isTrackCommandPlacedLogs())
+          && placedLogs.filterPlacedLogs(treeBlocks)) {
+         return;
+      }
 
-        if (plugin.getWorldGuardHook().isEnabled() && !plugin.getWorldGuardHook().canBreakAll(player, treeBlocks)) {
-            if (config.isDenyPartialBreaks()) {
-                return;
-            }
-            treeBlocks = treeBlocks.stream()
-                    .filter(treeBlock -> plugin.getWorldGuardHook().canBreakAll(player, List.of(treeBlock)))
-                    .toList();
-            if (treeBlocks.isEmpty()) {
-                return;
-            }
-        }
+      Set<Block> filtered = plugin.getWorldGuardHook().filterCannotBreak(player, treeBlocks);
+      if (filtered.isEmpty() || (filtered.size() != treeBlocks.size() && config.isDenyPartialBreaks())) {
+         return;
+      }
+      treeBlocks = filtered;
 
-        boolean confirmedDurabilityBreak = false;
-        int remainingDurability = getRemainingDurability(tool);
-        if (shouldConfirm(treeBlocks.size(), remainingDurability)) {
-            if (!consumeConfirmation(player, block)) {
-                event.setCancelled(true);
-                setPendingConfirmation(player, treeBlocks);
-                ActionBarUtil.send(player, msg.format("tool-will-break",
+      boolean confirmedDurabilityBreak = false;
+      int remainingDurability = getRemainingDurability(tool);
+      if (shouldConfirm(treeBlocks.size(), remainingDurability)) {
+         if (!consumeConfirmation(player, block)) {
+            event.setCancelled(true);
+            setPendingConfirmation(player, treeBlocks);
+            ActionBarUtil.send(
+                  player, msg.format(
+                        "tool-will-break",
                         "tool", toolName(tool),
                         "remaining", String.valueOf(remainingDurability),
                         "needed", String.valueOf(treeBlocks.size()),
-                        "time", String.valueOf(config.getConfirmationTimeSeconds())));
-                return;
-            }
-            confirmedDurabilityBreak = true;
-        }
-
-        event.setCancelled(true);
-
-        int broken = chopTree(player, treeBlocks, tool, confirmedDurabilityBreak);
-        if (broken > 0) {
-            confirmations.remove(player.getUniqueId());
-            setCooldown(player);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
-        cooldowns.remove(uuid);
-        confirmations.remove(uuid);
-        notices.cancel(uuid);
-    }
-
-    private int chopTree(Player player, List<Block> treeBlocks, ItemStack tool, boolean suppressBreakMessage) {
-        if (treeBlocks.isEmpty()) {
-            return 0;
-        }
-
-        Map<String, Integer> logsCounted = new HashMap<>();
-        for (Block block : treeBlocks) {
-            Material type = block.getType();
-            logsCounted.merge(type.name(), 1, Integer::sum);
-
-            if (config.allowVanillaDrops()) {
-                Collection<ItemStack> drops = block.getDrops(tool);
-                for (ItemStack drop : drops) {
-                    block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.35, 0.5), drop);
-                }
-            } else if (config.shouldDropItems()) {
-                block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.35, 0.5), new ItemStack(type));
-            }
-
-            block.setType(Material.AIR, false);
-        }
-
-        stats.recordTreeCut(player.getUniqueId(), logsCounted);
-        if (!config.shouldPreserveDurability()) {
-            handleToolDurability(player, tool, treeBlocks.size(), suppressBreakMessage);
-        }
-        return treeBlocks.size();
-    }
-
-    private void handleToolDurability(Player player, ItemStack tool, int blocksBroken, boolean suppressBreakMessage) {
-        if (tool == null || tool.getType().isAir()) {
+                        "time", String.valueOf(config.getConfirmationTimeSeconds())
+                  )
+            );
             return;
-        }
+         }
+         confirmedDurabilityBreak = true;
+      }
 
-        ItemMeta meta = tool.getItemMeta();
-        if (!(meta instanceof Damageable damageable) || meta.isUnbreakable()) {
-            return;
-        }
+      event.setCancelled(true);
 
-        int durabilityLoss = applyUnbreaking(blocksBroken, tool.getEnchantmentLevel(Enchantment.UNBREAKING));
-        int maxDurability = tool.getType().getMaxDurability();
-        int newDamage = damageable.getDamage() + durabilityLoss;
+      int broken = chopTree(player, treeBlocks, tool, confirmedDurabilityBreak, remainingDurability);
+      if (broken > 0) {
+         confirmations.remove(player.getUniqueId());
+         setCooldown(player);
+      }
+   }
 
-        if (maxDurability <= 0) {
-            return;
-        }
+   @EventHandler
+   public void onPlayerQuit(PlayerQuitEvent event) {
+      UUID uuid = event.getPlayer().getUniqueId();
+      cooldowns.remove(uuid);
+      confirmations.remove(uuid);
+      notices.cancel(uuid);
+   }
 
-        if (newDamage >= maxDurability) {
-            player.getInventory().setItemInMainHand(null);
-            if (!suppressBreakMessage) {
-                player.sendMessage(msg.format("tool-broke",
-                        "tool", toolName(tool),
-                        "count", String.valueOf(blocksBroken)));
-            }
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-            return;
-        }
+   private int chopTree(Player player, Collection<Block> treeBlocks, ItemStack tool, boolean suppressBreakMessage, int durability) {
+      if (treeBlocks.isEmpty()) {
+         return 0;
+      }
+      int limit = (durability <= 0 || config.shouldPreserveDurability()) ? Integer.MAX_VALUE : durability;
+      int chopped = 0;
+      Map<String, Integer> logsCounted = new HashMap<>();
+      for (Block block : treeBlocks) {
+         Material type = block.getType();
+         logsCounted.merge(type.name(), 1, Integer::sum);
 
-        damageable.setDamage(newDamage);
-        tool.setItemMeta(damageable);
-    }
+         if (config.allowVanillaDrops()) {
+            block.breakNaturally(tool);
+         } else if (!config.shouldDropItems()) {
+            block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.35, 0.5), new ItemStack(type));
+         }
 
-    private boolean isAxe(ItemStack tool) {
-        if (tool == null || tool.getType().isAir()) {
-            return false;
-        }
-        return tool.getType().name().endsWith("_AXE");
-    }
+         block.setType(Material.AIR, false);
 
-    private int getRemainingDurability(ItemStack tool) {
-        if (tool == null || tool.getType().isAir()) {
-            return -1;
-        }
+         if (++chopped == limit) {
+            break;
+         }
+      }
 
-        ItemMeta meta = tool.getItemMeta();
-        if (!(meta instanceof Damageable damageable) || meta.isUnbreakable()) {
-            return -1;
-        }
+      stats.recordTreeCut(player.getUniqueId(), logsCounted);
+      if (!config.shouldPreserveDurability()) {
+         handleToolDurability(player, tool, chopped, suppressBreakMessage);
+      }
+      return chopped;
+   }
 
-        int maxDurability = tool.getType().getMaxDurability();
-        if (maxDurability <= 0) {
-            return -1;
-        }
+   private void handleToolDurability(Player player, ItemStack tool, int blocksBroken, boolean suppressBreakMessage) {
+      if (tool == null || tool.getType().isAir() || blocksBroken == 0) {
+         return;
+      }
 
-        return Math.max(0, maxDurability - damageable.getDamage());
-    }
+      ItemMeta meta = tool.getItemMeta();
+      if (meta.isUnbreakable() || !(meta instanceof Damageable damageable)) {
+         return;
+      }
 
-    private boolean shouldConfirm(int treeSize, int remainingDurability) {
-        return config.isConfirmationRequired()
-                && !config.shouldPreserveDurability()
-                && remainingDurability >= 0
-                && treeSize >= remainingDurability;
-    }
+      int durabilityLoss = applyUnbreaking(blocksBroken, tool.getEnchantmentLevel(Enchantment.UNBREAKING));
 
-    private double getCooldownRemaining(Player player) {
-        Long lastUse = cooldowns.get(player.getUniqueId());
-        if (lastUse == null) {
-            return 0D;
-        }
-        long cooldownMs = (long) (config.getCooldownSeconds() * 1000L);
-        long remainingMs = cooldownMs - (System.currentTimeMillis() - lastUse);
-        if (remainingMs <= 0L) {
-            return 0D;
-        }
-        return remainingMs / 1000D;
-    }
+      int maxDurability = tool.getType().getMaxDurability();
+      int newDamage = damageable.getDamage() + durabilityLoss;
 
-    private String formatSeconds(double seconds) {
-        return String.valueOf((int) Math.ceil(seconds));
-    }
+      if (maxDurability <= 0) {
+         return;
+      }
 
-    private void clearExpiredConfirmation(Player player) {
-        PendingConfirmation pending = confirmations.get(player.getUniqueId());
-        if (pending == null) {
-            return;
-        }
-        if (pending.expiresAt() < System.currentTimeMillis()) {
-            confirmations.remove(player.getUniqueId());
-        }
-    }
+      if (newDamage >= maxDurability) {
+         tool.setAmount(0);
+         if (!suppressBreakMessage) {
+            player.sendMessage(msg.format(
+                  "tool-broke",
+                  "tool", toolName(tool),
+                  "count", String.valueOf(blocksBroken)
+            ));
+         }
+         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+         return;
+      }
 
-    private boolean consumeConfirmation(Player player, Block block) {
-        PendingConfirmation pending = confirmations.get(player.getUniqueId());
-        if (pending == null) {
-            return false;
-        }
-        if (pending.expiresAt() < System.currentTimeMillis()) {
-            confirmations.remove(player.getUniqueId());
-            return false;
-        }
-        if (!pending.treeKeys().contains(blockKey(block))) {
-            return false;
-        }
-        confirmations.remove(player.getUniqueId());
-        return true;
-    }
+      damageable.setDamage(newDamage);
+      tool.setItemMeta(damageable);
+   }
 
-    private void setPendingConfirmation(Player player, List<Block> treeBlocks) {
-        long expiresAt = System.currentTimeMillis() + (long) (config.getConfirmationTimeSeconds() * 1000L);
-        confirmations.put(player.getUniqueId(), new PendingConfirmation(toBlockKeys(treeBlocks), expiresAt));
-    }
+   private boolean isAxe(ItemStack tool) {
+      if (tool == null || tool.getType().isAir()) {
+         return false;
+      }
+      return tool.getType().name().endsWith("_AXE");
+   }
 
-    private Set<String> toBlockKeys(List<Block> blocks) {
-        Set<String> keys = new HashSet<>(Math.max(16, blocks.size()));
-        for (Block block : blocks) {
-            keys.add(blockKey(block));
-        }
-        return keys;
-    }
+   private int getRemainingDurability(ItemStack tool) {
+      if (tool == null || tool.getType().isAir()) {
+         return -1;
+      }
 
-    private String blockKey(Block block) {
-        return block.getWorld().getUID() + ":" + block.getX() + ":" + block.getY() + ":" + block.getZ();
-    }
+      ItemMeta meta = tool.getItemMeta();
+      if (!(meta instanceof Damageable damageable) || meta.isUnbreakable()) {
+         return -1;
+      }
 
-    private int applyUnbreaking(int baseLoss, int unbreakingLevel) {
-        if (unbreakingLevel <= 0) {
-            return baseLoss;
-        }
+      int maxDurability = tool.getType().getMaxDurability();
+      if (maxDurability <= 0) {
+         return -1;
+      }
 
-        int actualLoss = 0;
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        for (int i = 0; i < baseLoss; i++) {
-            if (random.nextInt(unbreakingLevel + 1) == 0) {
-                actualLoss++;
-            }
-        }
-        return actualLoss;
-    }
+      return Math.max(0, maxDurability - damageable.getDamage());
+   }
 
-    private void setCooldown(Player player) {
-        cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
-    }
+   private boolean shouldConfirm(int treeSize, int remainingDurability) {
+      return config.isConfirmationRequired()
+             && !config.shouldPreserveDurability()
+             && remainingDurability >= 0
+             && treeSize >= remainingDurability;
+   }
 
-    private String toolName(ItemStack tool) {
-        if (tool == null || tool.getType().isAir()) {
-            return "tool";
-        }
-        ItemMeta meta = tool.getItemMeta();
-        if (meta != null && meta.hasDisplayName()) {
-            return meta.getDisplayName();
-        }
-        String raw = tool.getType().name().toLowerCase(Locale.ROOT);
-        StringBuilder builder = new StringBuilder();
-        for (String part : raw.split("_")) {
-            if (part.isEmpty()) {
-                continue;
-            }
-            builder.append(Character.toUpperCase(part.charAt(0)))
-                    .append(part.substring(1))
-                    .append(' ');
-        }
-        return builder.toString().trim();
-    }
+   private double getCooldownRemaining(Player player) {
+      Long lastUse = cooldowns.get(player.getUniqueId());
+      if (lastUse == null) {
+         return 0D;
+      }
+      long cooldownMs = (long) (config.getCooldownSeconds() * 1000L);
+      long remainingMs = cooldownMs - (System.currentTimeMillis() - lastUse);
+      if (remainingMs <= 0L) {
+         return 0D;
+      }
+      return remainingMs / 1000D;
+   }
 
-    private record PendingConfirmation(Set<String> treeKeys, long expiresAt) {
-    }
+   private String formatSeconds(double seconds) {
+      return String.valueOf((int) Math.ceil(seconds));
+   }
+
+   private void clearExpiredConfirmation(Player player) {
+      PendingConfirmation pending = confirmations.get(player.getUniqueId());
+      if (pending == null) {
+         return;
+      }
+      if (pending.expiresAt() < System.currentTimeMillis()) {
+         confirmations.remove(player.getUniqueId());
+      }
+   }
+
+   private boolean consumeConfirmation(Player player, Block block) {
+      PendingConfirmation pending = confirmations.get(player.getUniqueId());
+      if (pending == null) {
+         return false;
+      }
+      if (pending.expiresAt() < System.currentTimeMillis()) {
+         confirmations.remove(player.getUniqueId());
+         return false;
+      }
+      if (!pending.trees().contains(block.getLocation())) {
+         return false;
+      }
+      confirmations.remove(player.getUniqueId());
+      return true;
+   }
+
+   private void setPendingConfirmation(Player player, Collection<Block> treeBlocks) {
+      long expiresAt = System.currentTimeMillis() + config.getConfirmationTimeSeconds() * 1000L;
+      confirmations.put(player.getUniqueId(), new PendingConfirmation(toBlockKeys(treeBlocks), expiresAt));
+   }
+
+   private Set<Location> toBlockKeys(Collection<Block> blocks) {
+      Set<Location> keys = new HashSet<>(Math.max(16, blocks.size()));
+      for (Block block : blocks) {
+         keys.add(block.getLocation());
+      }
+      return keys;
+   }
+
+
+   private int applyUnbreaking(int baseLoss, int unbreakingLevel) {
+      if (unbreakingLevel <= 0) {
+         return baseLoss;
+      }
+
+      /*
+            If UNBREAKING is set, then chance (according to wiki) of losing durability for tool is 100%/(level+1)
+            Which means with lvl of 3, chance to LOSE dur is (100%/(3+1)) which is 100%/4 or 25% (or 0.25)
+            So if RANDOM() between 0 and 1 is LESS than 0.25 we "add" damage to item
+       */
+      double chance = 1.0 / (unbreakingLevel + 1);
+      return (int) ThreadLocalRandom.current().doubles(baseLoss).filter((d) -> d < chance).count();
+   }
+
+   private void setCooldown(Player player) {
+      cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+   }
+
+   private String toolName(ItemStack tool) {
+      if (tool == null || tool.getType().isAir()) {
+         return "tool";
+      }
+      ItemMeta meta = tool.getItemMeta();
+      if (meta != null && meta.hasDisplayName()) {
+         return meta.getDisplayName();
+      }
+      String raw = tool.getType().name().toLowerCase(Locale.ROOT);
+      StringBuilder builder = new StringBuilder();
+      for (String part : raw.split("_")) {
+         if (part.isEmpty()) {
+            continue;
+         }
+         builder.append(Character.toUpperCase(part.charAt(0)))
+                .append(part.substring(1))
+                .append(' ');
+      }
+      return builder.toString().trim();
+   }
+
+   private record PendingConfirmation(Set<Location> trees, long expiresAt) {
+   }
 }
